@@ -88,7 +88,7 @@ void shiftLeft(char *bitset, int n) {
 
 int compare(const char *bitset1, const char *bitset2, int n = BITSET_SIZE_8) {
 	for (int i = n - 1; i >= 0; --i) {
-		if (bitset1[i] ^ bitset2[i]) { // Nếu bit a và bit b khác dấu thì hoặc a hoặc b nhỏ hơn, tấn thay bitset1[i] != bitset2[i] chắc hoạt động tương tự
+		if (bitset1[i] != bitset2[i]) { // Nếu bit a và bit b khác dấu thì hoặc a hoặc b nhỏ hơn, tấn thay bitset1[i] != bitset2[i] chắc hoạt động tương tự
 			if (bitset1[i] < bitset2[i]) return -1; // a nhỏ hơn return 1
 			return 1;
 		}
@@ -233,6 +233,8 @@ char *div(char *bitset1, char *bitset2, char *remainder = nullptr) {
 	return quotient;
 }
 
+
+
 void run(char a, char b) {
 	char *b1 = toBitset( a);
 	char *b2 = toBitset( b);
@@ -277,9 +279,9 @@ void run(char a, char b) {
 	delete[] b2;
 }
 
-//void printTest(int a, int b) {
-//	printf("%i / %i -> %i %i\n", a, b, a / b, a % b);
-//}
+void printTest(int a, int b) {
+	printf("%i / %i -> %i %i\n", a, b, a / b, a % b);
+}
 
 char input(const string &vName) {
 	int x;
@@ -300,6 +302,8 @@ int main() {
 //	char n1{12};
 //	char n2{0};
 	run(n1, n2);
+	cout << "\n";
+	printTest(n1, n2);
 	return 0;
 }
 
