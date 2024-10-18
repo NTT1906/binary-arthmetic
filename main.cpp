@@ -1,9 +1,13 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
 #include <iostream>
 
 using namespace std;
 
 #define BITSET_SIZE_8 8
-#define BITSET_SIZE_16 (2 * BITSET_SIZE_8)
+#define BITSET_SIZE_16 16
+
+//#define DEBUG_M // Turn on bruteforce to test out all case
 
 char *toBitset(char x) {
 	char *c = new char[BITSET_SIZE_8];
@@ -88,8 +92,8 @@ void shiftLeft(char *bitset, int n) {
 
 int compare(const char *bitset1, const char *bitset2, int n = BITSET_SIZE_8) {
 	for (int i = n - 1; i >= 0; --i) {
-		if (bitset1[i] != bitset2[i]) { // Nếu bit a và bit b khác dấu thì hoặc a hoặc b nhỏ hơn, tấn thay bitset1[i] != bitset2[i] chắc hoạt động tương tự
-			if (bitset1[i] < bitset2[i]) return -1; // a nhỏ hơn return 1
+		if (bitset1[i] != bitset2[i]) {
+			if (bitset1[i] < bitset2[i]) return -1;
 			return 1;
 		}
 	}
@@ -279,9 +283,11 @@ void run(char a, char b) {
 	delete[] b2;
 }
 
+#ifdef DEBUG_M
 void printTest(int a, int b) {
 	printf("%i / %i -> %i %i\n", a, b, a / b, a % b);
 }
+#endif
 
 char input(const string &vName) {
 	int x;
@@ -302,9 +308,40 @@ int main() {
 //	char n1{12};
 //	char n2{0};
 	run(n1, n2);
+
+#ifdef DEBUG_M // Debug mode, only run when DEBUG_M is defined...
 	cout << "\n";
 	printTest(n1, n2);
+	cout << "\n";
+	char *a, *b;
+	char *d, *m;
+	for (int i = -128; i < 128; i++) {
+		for (int j = -128; j < 128; j++) {
+			if (j == 0) continue; // avoid useless "divide by zero" case
+			if (i == -128 && j == -1) continue; // overflowed case
+			a = toBitset((char) i);
+			b = toBitset((char) j);
+			m = new char[8];
+			d = div(a, b, m);
+			if (d == nullptr) {
+				cout << i << " N " << j << "\n";
+				continue;
+			}
+			int cd = to8BitNum(d);
+			int cm = to8BitNum(m);
+			if (cd != i / j || cm != i % j) {
+				cout << i << " : " << j << "   ";
+				printTest(i, j);
+				cout << " but " << cd << " " << cm << "\n";
+			}
+			delete[] d;
+			delete[] m;
+			delete[] a;
+			delete[] b;
+		}
+	}
+#endif
+
 	return 0;
 }
-
 #pragma clang diagnostic pop
