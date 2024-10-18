@@ -1,22 +1,21 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
 #include <iostream>
 
 using namespace std;
 
-#include <vector>
+#define BITSET_SIZE_8 8
+#define BITSET_SIZE_16 (2 * BITSET_SIZE_8)
 
 char *toBitset(char x) {
-	char *c = new char[8];
-	for (int i = 0; i < 8; i++) {
+	char *c = new char[BITSET_SIZE_8];
+	for (int i = 0; i < BITSET_SIZE_8; i++) {
 		c[i] = x >> i & 1;
 	}
 	return c;
 }
 
 char *toBitset(short x) {
-	char *c = new char[16];
-	for (int i = 0; i < 16; i++) {
+	char *c = new char[BITSET_SIZE_16];
+	for (int i = 0; i < BITSET_SIZE_16; i++) {
 		c[i] = x >> i & 1;
 	}
 	return c;
@@ -24,7 +23,7 @@ char *toBitset(short x) {
 
 char to8BitNum(const char *bitset) {
 	char x{};
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < BITSET_SIZE_8; ++i)
 		if ((int)bitset[i] > 0)
 			x |= (1 << i);
 
@@ -33,95 +32,47 @@ char to8BitNum(const char *bitset) {
 
 short to16BitNum(const char *bitset) {
 	short x{};
-	for (int i = 0; i < 16; ++i)
+	for (int i = 0; i < BITSET_SIZE_16; ++i)
 		if ((int)bitset[i] > 0)
 			x |= (1 << i);
 
 	return x;
 }
 
-void copyBitset(const char *bitset1, char *bitset2, int n = 8) {
+void copyBitset(const char *bitset1, char *bitset2, int n = BITSET_SIZE_8) {
 	for (int i = 0; i < n; i++)
 		bitset2[i] = bitset1[i];
 }
 
-char *getBitsetCopy(const char *bitset, int n = 8) {
+char *getBitsetCopy(const char *bitset, int n = BITSET_SIZE_8) {
 	char *nBs = new char[n]{};
 	copyBitset(bitset, nBs, n);
 	return nBs;
 }
 
-void printBitset(const char *bitset, int n = 8) {
+void printBitset(const char *bitset, int n = BITSET_SIZE_8) {
 	for (int i = n - 1; i >= 0; i--) {
-		if (i % 8 == 7) cout << ' ';
 		cout << (((int) bitset[i] > 0) ? 1 : 0);
 	}
 	cout << " : ";
-	if (n == 8) {
+	if (n == BITSET_SIZE_8) {
 		cout << (int) to8BitNum(bitset);
-	} else if (n == 16) {
+	} else if (n == BITSET_SIZE_16) {
 		cout << (int) to16BitNum(bitset);
 	}
 }
 
-// /* get2Complement, memory effi */
-//char *get2Complement(const char *bitset, int n = 8) {
-//	char *result = new char[n];
-//	bool electricBoogaloo = false;
-//	for (int i = 0; i < n; i++) {
-//		if (!electricBoogaloo && result[i]) electricBoogaloo = true;
-//		result[i] = electricBoogaloo ? bitset[bitset] ^ 1 : bitset[i];
-//	}
-//	return result;
-//}
-
-// /* get2Complement, memory effi & time effi */
-char *get2Complement(const char *bitset, int n = 8) {
+char *get2Complement(const char *bitset, int n = BITSET_SIZE_8) {
 	char *result = new char[n]{};
-	int i = 0;
-	while (i < n) {
-		result[i] = bitset[i];
-		if (bitset[i]) {
-			break;
-		}
-		++i;
-	}
-	++i;
-	while (i < n) {
-		result[i] = bitset[i] ^ 1;
-		++i;
+	for (int i = 0; i < n; i++) result[i] = bitset[i] ^ 1;
+
+	bool carry = true;
+	for (int i = 0; carry && i < n; i++) {
+		result[i] ^= carry;
+		carry &= bitset[i] == 0;
 	}
 	return result;
 }
-
-// /* get2Complement, good structured? */
-
-//char *get2Complement(const char *bitset, int n = 8) {
-//	char *result = new char[n]{};
-//	for (int i = 0; i < n; i++) result[i] = bitset[i] ^ 1; // Flip bits
-//
-//	bool carry = true;
-//	for (int i = 0; carry && i < n; i++) {
-//		result[i] ^= carry;
-//		carry = !result[i]; // Correct carry propagation
-//	}
-//	return result;
-//}
-
-// /* get2Complement, original */
-
-//char *get2Complement(const char *bitset, int n = 8) {
-////	return toBitset(-(unsigned char) to8BitNum(bitset));
-//	char *result = new char[n]{};
-//	for (int i = 0; i < n; i++) result[i] = bitset[i] ^ 1;
-//
-//	bool carry = true;
-//	for (int i = 0; carry && i < n; i++) {
-//		result[i] ^= carry;
-//		carry &= bitset[i] == 0;
-//	}
-//	return result;
-//}
 
 void shiftRight(char *bitset, int n) {
 	for (int i = 0; i < n - 1; ++i)
@@ -135,25 +86,24 @@ void shiftLeft(char *bitset, int n) {
 	bitset[0] = 0;
 }
 
-int compare(const char *bitset1, const char *bitset2, int n = 8) {
+int compare(const char *bitset1, const char *bitset2, int n = BITSET_SIZE_8) {
 	for (int i = n - 1; i >= 0; --i) {
-		if (bitset1[i] != bitset2[i]) { // Nếu bit a và bit b khác dấu thì hoặc a hoặc b nhỏ hơn, thay bitset1[i] != bitset2[i] chắc hoạt động tương tự
-			if (bitset1[i] < bitset2[i]) return -1; // bit a nhỏ hơn bit b thì return -1
+		if (bitset1[i] ^ bitset2[i]) { // Nếu bit a và bit b khác dấu thì hoặc a hoặc b nhỏ hơn, tấn thay bitset1[i] != bitset2[i] chắc hoạt động tương tự
+			if (bitset1[i] < bitset2[i]) return -1; // a nhỏ hơn return 1
 			return 1;
 		}
 	}
-	// nếu nó tới đây thì mọi bit theo thứ tự trong a, b bằng nhau nên a, b bằng nhau
 	return 0;
 }
 
-void resetBitset(char *bitset, int n = 8) {
-	for (int i = 0; i < n; ++i) bitset[i] = 0; // đẩy mảng về 0
+void resetBitset(char *bitset, int n = BITSET_SIZE_8) {
+	for (int i = 0; i < n; ++i) bitset[i] = 0;
 }
 
 char *add(const char *bitset1, const char *bitset2) {
-	char *result = new char[8]{};
+	char *result = new char[BITSET_SIZE_8]{};
 	bool carry = false;
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < BITSET_SIZE_8; i++) {
 		result[i] = (bitset1[i] ^ bitset2[i] ^ carry);
 		carry = (bitset1[i] & bitset2[i]) || (carry && (bitset1[i] ^ bitset2[i]));
 	}
@@ -167,114 +117,93 @@ char *sub(char *bitset1, char *bitset2) {
 	return result;
 }
 
-/**
- * @brief Multiply two number
- * @param bitset1 Input first value
- * @param bitset2 Input second value
- */
 char *mul(char *bitset1, char *bitset2) {
-	char *result = new char[16];
+	char *result = new char[2 * BITSET_SIZE_8];
 	// Convert to positive
-	char *mul1 = bitset1[7] ? get2Complement(bitset1) : getBitsetCopy(bitset1);
-	char *mul2 = bitset2[7] ? get2Complement(bitset2) : getBitsetCopy(bitset2);
+	char *mul1 = bitset1[BITSET_SIZE_8 - 1] ? get2Complement(bitset1) : getBitsetCopy(bitset1);
+	char *mul2 = bitset2[BITSET_SIZE_8 - 1] ? get2Complement(bitset2) : getBitsetCopy(bitset2);
 
-	char mulPool[16]{};
-	for (int i = 0; i < 8; ++i) mulPool[i] = mul2[i];
+	char *mulPool = new char[2 * BITSET_SIZE_8 + 2]{};
+	for (int i = 0; i < BITSET_SIZE_8; ++i) mulPool[i] = mul2[i];
 
-	bool cAll = false;
-
-	for (int i = 0; i < 8; ++i) {
+	for (int i = 0; i < BITSET_SIZE_8; ++i) {
 		if (mul2[i] != 0) {
 			bool carry = false;
-			for (int j = 8; j < 16; ++j) {
+			for (int j = BITSET_SIZE_8; j < BITSET_SIZE_8 * 2; ++j) {
 				char tmp = mulPool[j];
-				char tmp1 = mul1[j - 8];
+				char tmp1 = mul1[j - BITSET_SIZE_8];
 				mulPool[j] = (mulPool[j] ^ tmp1 ^ carry);
-				carry = (tmp1 > 0 && tmp > 0) || (carry && (tmp1 ^ tmp));
+				carry = (tmp1 > 0 && tmp > 0) || (carry == 1 && (tmp1 ^ tmp) == 1);
 			}
-			cAll ^= carry;
+			mulPool[BITSET_SIZE_8 * 2] ^= carry;
 		}
-		shiftRight(mulPool, 16);
-		mulPool[15] = cAll;
+		shiftRight(mulPool, 2 * BITSET_SIZE_8 + 1);
 	}
 	// Tweak the result to get the correct sign
-	if (bitset1[7] ^ bitset2[7]) {
-		result = get2Complement(mulPool, 16);
+	if ((bitset1[BITSET_SIZE_8 - 1] ^ bitset2[BITSET_SIZE_8 - 1]) == 1) {
+		result = get2Complement(mulPool, BITSET_SIZE_16);
 	} else {
-		for (int i = 0; i < 16; i++) {
+		for (int i = 0; i < BITSET_SIZE_16; i++) {
 			result[i] = mulPool[i];
 		}
 	}
 
 	delete[] mul1;
 	delete[] mul2;
+	delete[] mulPool;
 	return result;
 }
 
-/**
- * @brief Long divide algorithm, bitset1 / bitset2
- * @param bitset1 Input dividend
- * @param bitset2 Input divisor
- * @param remainder Output remainder (optional)
- *
- * @example -72 / 20 -> -3, -12
- * @example  25 / -3 -> -8,   1
- * @note if remainder is not set (NULL by default), the algo will continue without giving the remainder of the operator
- */
 char *div(char *bitset1, char *bitset2, char *remainder = nullptr) {
 	// Check if bitset2 is zero, if yes then throw an exception as "Cannot divide by zero."
 	int firstMeaningBit = 0;
-	while (firstMeaningBit < 8) {
+	while (firstMeaningBit < BITSET_SIZE_8) {
 		if (bitset2[firstMeaningBit]) break;
 		++firstMeaningBit;
 	}
-	if (firstMeaningBit == 8) {
+	if (firstMeaningBit == BITSET_SIZE_8) {
 		printf("Cannot divide by zero.\n");
 		return nullptr;
 //		throw invalid_argument("Cannot divide by zero.");
 	}
 
 	// Convert to both bitset1 and bitset2 to their positive counterpart if not.
-	char *dividend = bitset1[7] ? get2Complement(bitset1, 8) : getBitsetCopy(bitset1, 8);
-	char *divisor = bitset2[7] ? get2Complement(bitset2, 8) : getBitsetCopy(bitset2, 8);
+	char *dividend = bitset1[BITSET_SIZE_8 - 1] ? get2Complement(bitset1, BITSET_SIZE_8) : getBitsetCopy(bitset1, BITSET_SIZE_8);
+	char *divisor = bitset2[BITSET_SIZE_8 - 1] ? get2Complement(bitset2, BITSET_SIZE_8) : getBitsetCopy(bitset2, BITSET_SIZE_8);
 	int c = compare(dividend, divisor);
 
-	char *quotient = new char[8]{};
+	char *quotient = new char[BITSET_SIZE_8]{};
 
 	if (c > 0) { // If bitset1 is greater than bitset2
 		int maxPossibleShift = 0;
-		for (int i = 8 - 1; i >= 0; --i) {
+		for (int i = BITSET_SIZE_8 - 1; i >= 0; --i) {
 			if (divisor[i]) break;
 			++maxPossibleShift;
 		}
-		char tmpDivisor[8];
-		copyBitset(divisor, tmpDivisor);
+		char *tmpDivisor = new char[BITSET_SIZE_8]{};
 
-		while (true) {  // process loop
-			if (compare(dividend, divisor) == -1) {
-				copyBitset(dividend, remainder, 8);
-				break;
-			}
+		while (compare(dividend, divisor) != -1) {  // process loop
 			int numShiftLeft = 0;
-			copyBitset(divisor, tmpDivisor, 8);
+			copyBitset(divisor, tmpDivisor, BITSET_SIZE_8);
 			while (numShiftLeft < maxPossibleShift && compare(tmpDivisor, dividend) < 1) { // shift left loop
-				shiftLeft(tmpDivisor, 8);
+				shiftLeft(tmpDivisor, BITSET_SIZE_8);
 				++numShiftLeft;
 			}
 			if (compare(tmpDivisor, dividend) == 1) {
-				shiftRight(tmpDivisor, 8);
+				shiftRight(tmpDivisor, BITSET_SIZE_8);
 				--numShiftLeft;
 			}
 			quotient[numShiftLeft] = 1;
 
 			char *tmp = sub(dividend, tmpDivisor);
-			copyBitset(tmp, dividend, 8);
+			copyBitset(tmp, dividend, BITSET_SIZE_8);
 			delete[] tmp;
 		}
+		delete[] tmpDivisor;
 	} else { // else, either bitset1 is equal to bitset2 or smaller, if smaller than the reminder is bitset1
 		if (remainder != nullptr) {
 			if (c == 0) {
-				resetBitset(remainder, 8); // bitset1 = bitset2 -> remainder = 0
+				resetBitset(remainder, BITSET_SIZE_8); // bitset1 = bitset2 -> remainder = 0
 			} else {
 				copyBitset(bitset1, remainder); // remainder = bitset1, bitset1 < bitset2
 			}
@@ -283,20 +212,20 @@ char *div(char *bitset1, char *bitset2, char *remainder = nullptr) {
 	}
 
 	// Tweak the sign of quotient to their correct value, the quotient sign is the xor result of bitset1 & bitset2
-	if (bitset1[8 - 1] ^ bitset2[8 - 1]) {
-		char *tmp = get2Complement(quotient, 8);
+	if (bitset1[BITSET_SIZE_8 - 1] ^ bitset2[BITSET_SIZE_8 - 1]) {
+		char *tmp = get2Complement(quotient, BITSET_SIZE_8);
 		delete[] quotient;
 		quotient = tmp;
 	}
-	if (remainder != nullptr) {
+	if (remainder != nullptr && c != 0) {
 		char *tmp;
 		// Same as the above but the remainder sign is the sign of bitset1
-		if (bitset1[8 - 1]) {
+		if (bitset1[BITSET_SIZE_8 - 1]) {
 			tmp = get2Complement(dividend);
-			copyBitset(tmp, remainder, 8);
+			copyBitset(tmp, remainder, BITSET_SIZE_8);
 			delete[] tmp;
 		} else {
-			copyBitset(dividend, remainder, 8);
+			copyBitset(dividend, remainder, BITSET_SIZE_8);
 		}
 	}
 	delete[] dividend;
@@ -330,12 +259,12 @@ void run(char a, char b) {
 	cout << "\n\n[MULTIPLY]";
 	cout << "\n[x] b1 x b2 = ";
 	char *r4 = mul(b1, b2);
-	printBitset(r4, 16);
+	printBitset(r4, BITSET_SIZE_16);
 	delete[] r4;
 
 	cout << "\n\n[DIVIDE]";
 	cout << "\n[/] b1 / b2 = ";
-	char *remainder = new char[8]{};
+	char *remainder = new char[BITSET_SIZE_8]{};
 	char *r6 = div(b1, b2, remainder);
 	if (r6 != nullptr) {
 		printBitset(r6);
@@ -348,9 +277,9 @@ void run(char a, char b) {
 	delete[] b2;
 }
 
-void printTest(int a, int b) {
-	printf("%i / %i -> %i %i\n", a, b, a / b, a % b);
-}
+//void printTest(int a, int b) {
+//	printf("%i / %i -> %i %i\n", a, b, a / b, a % b);
+//}
 
 char input(const string &vName) {
 	int x;
@@ -371,31 +300,6 @@ int main() {
 //	char n1{12};
 //	char n2{0};
 	run(n1, n2);
-
-	printTest(n1, n2);
-	cout << "\n";
-	char *a, *b;
-	char *d, *m;
-	for (int i = -128; i < 128; i++) {
-		for (int j = -128; j < 128; j++) {
-			if (j == 0) continue;
-			a = toBitset((char) i);
-			b = toBitset((char) j);
-			m = new char[8];
-			d = div(a, b, m);
-			if (d == nullptr) {
-				cout << i << " N " << j << "\n";
-				continue;
-			}
-			if (to8BitNum(d) != i / j || to8BitNum(m) != i % j) {
-				cout << i << " : " << j << "\n";
-			}
-			delete[] d;
-			delete[] m;
-			delete[] a;
-			delete[] b;
-		}
-	}
 	return 0;
 }
 
